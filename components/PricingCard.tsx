@@ -3,9 +3,9 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  Pressable,
   Alert,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -16,8 +16,109 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check } from 'lucide-react-native';
 
-const { width } = Dimensions.get('window');
-const isTablet = width > 768;
+const createStyles = (isTablet: boolean) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: '#16213E',
+      borderRadius: 16,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: '#2D2D3A',
+      position: 'relative',
+      marginHorizontal: isTablet ? 8 : 0,
+      maxWidth: isTablet ? 350 : '100%',
+    },
+    popularCard: {
+      borderColor: '#8B5CF6',
+      borderWidth: 2,
+    },
+    popularBadge: {
+      backgroundColor: '#8B5CF6',
+      paddingHorizontal: 10,
+      paddingVertical: 3,
+      borderRadius: 16,
+      position: 'absolute',
+      top: -10,
+      alignSelf: 'center',
+    },
+    popularBadgeText: {
+      color: 'white',
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    planName: {
+      fontSize: isTablet ? 24 : 20,
+      fontWeight: 'bold',
+      color: 'white',
+      textAlign: 'center',
+      marginBottom: 6,
+    },
+    priceContainer: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      justifyContent: 'center',
+      marginBottom: 6,
+    },
+    price: {
+      fontSize: isTablet ? 48 : 36,
+      fontWeight: 'bold',
+      color: 'white',
+    },
+    period: {
+      fontSize: isTablet ? 18 : 14,
+      color: '#9CA3AF',
+      marginLeft: 2,
+    },
+    description: {
+      fontSize: 14,
+      color: '#9CA3AF',
+      textAlign: 'center',
+      marginBottom: 24,
+      lineHeight: 20,
+    },
+    featuresContainer: {
+      gap: 12,
+      marginBottom: 24,
+    },
+    feature: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    featureText: {
+      fontSize: 14,
+      color: '#D1D5DB',
+      flex: 1,
+      lineHeight: 20,
+    },
+    button: {
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    buttonGradient: {
+      paddingVertical: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonSecondary: {
+      backgroundColor: '#2D2D3A',
+      paddingVertical: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: '#3D3D4A',
+    },
+    buttonTextPrimary: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: 'white',
+    },
+    buttonTextSecondary: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: '#D1D5DB',
+    },
+  });
 
 interface PricingPlan {
   id: string;
@@ -34,15 +135,20 @@ interface PricingCardProps {
   plan: PricingPlan;
 }
 
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function PricingCard({ plan }: PricingCardProps) {
+  const { width } = useWindowDimensions();
+  const isTablet = width > 768;
+  const styles = React.useMemo(() => createStyles(isTablet), [isTablet]);
+
   const buttonScale = useSharedValue(1);
   const buttonOpacity = useSharedValue(1);
+  const buttonHover = useSharedValue(1);
 
   const buttonAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: buttonScale.value }],
+      transform: [{ scale: buttonScale.value * buttonHover.value }],
       opacity: buttonOpacity.value,
     };
   });
@@ -87,11 +193,13 @@ export default function PricingCard({ plan }: PricingCardProps) {
         ))}
       </View>
       
-      <AnimatedTouchableOpacity 
+      <AnimatedPressable 
         style={[styles.button, buttonAnimatedStyle]} 
         onPress={handleSubscribe}
         onPressIn={handleButtonPressIn}
         onPressOut={handleButtonPressOut}
+        onHoverIn={() => (buttonHover.value = withSpring(1.03))}
+        onHoverOut={() => (buttonHover.value = withSpring(1))}
       >
         {plan.isPopular ? (
           <LinearGradient
@@ -105,110 +213,7 @@ export default function PricingCard({ plan }: PricingCardProps) {
             <Text style={styles.buttonTextSecondary}>{plan.buttonText}</Text>
           </View>
         )}
-      </AnimatedTouchableOpacity>
+      </AnimatedPressable>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#16213E',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#2D2D3A',
-    position: 'relative',
-    marginHorizontal: isTablet ? 8 : 0,
-    maxWidth: isTablet ? 350 : '100%',
-  },
-  popularCard: {
-    borderColor: '#8B5CF6',
-    borderWidth: 2,
-  },
-  popularBadge: {
-    backgroundColor: '#8B5CF6',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 16,
-    position: 'absolute',
-    top: -10,
-    alignSelf: 'center',
-  },
-  popularBadgeText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  planName: {
-    fontSize: isTablet ? 24 : 20,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 6,
-  },
-  priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'center',
-    marginBottom: 6,
-  },
-  price: {
-    fontSize: isTablet ? 48 : 36,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  period: {
-    fontSize: isTablet ? 18 : 14,
-    color: '#9CA3AF',
-    marginLeft: 2,
-  },
-  description: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  featuresContainer: {
-    gap: 12,
-    marginBottom: 24,
-  },
-  feature: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  featureText: {
-    fontSize: 14,
-    color: '#D1D5DB',
-    flex: 1,
-    lineHeight: 20,
-  },
-  button: {
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  buttonGradient: {
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonSecondary: {
-    backgroundColor: '#2D2D3A',
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#3D3D4A',
-  },
-  buttonTextPrimary: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: 'white',
-  },
-  buttonTextSecondary: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#D1D5DB',
-  },
-});

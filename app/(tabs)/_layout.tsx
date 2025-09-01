@@ -1,8 +1,12 @@
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 import { Chrome as Home, Wrench, DollarSign, User } from 'lucide-react-native';
 
 export default function TabLayout() {
+  const { width } = useWindowDimensions();
+  const isSmall = width < 360;
+  const isTablet = width >= 768;
+
   return (
     <Tabs
       screenOptions={{
@@ -11,14 +15,14 @@ export default function TabLayout() {
           backgroundColor: '#16213E',
           borderTopColor: '#2D2D3A',
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 85 : 65,
-          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
-          paddingTop: 10,
+          height: Platform.OS === 'ios' ? (isSmall ? 70 : 85) : (isSmall ? 56 : 65),
+          paddingBottom: Platform.OS === 'ios' ? (isSmall ? 16 : 25) : (isSmall ? 6 : 10),
+          paddingTop: isSmall ? 6 : 10,
         },
         tabBarActiveTintColor: '#8B5CF6',
         tabBarInactiveTintColor: '#9CA3AF',
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: isSmall ? 10 : 12,
           fontWeight: '600',
           marginTop: 4,
         },

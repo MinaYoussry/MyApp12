@@ -4,9 +4,9 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
+  Pressable,
   SafeAreaView,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -20,24 +20,172 @@ import { Sparkles, Zap, Star } from 'lucide-react-native';
 import ToolCard from '@/components/ToolCard';
 import { featuredTools } from '@/data/tools';
 
-const { width } = Dimensions.get('window');
-const isTablet = width > 768;
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+const createStyles = (isTablet: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#0A0A0F',
+    },
+    heroSection: {
+      paddingHorizontal: 16,
+      paddingVertical: 40,
+      alignItems: 'center',
+    },
+    heroContent: {
+      alignItems: 'center',
+      width: '100%',
+      maxWidth: isTablet ? 600 : '100%',
+    },
+    logoContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    logo: {
+      width: isTablet ? 56 : 44,
+      height: isTablet ? 56 : 44,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 10,
+    },
+    logoText: {
+      fontSize: isTablet ? 28 : 20,
+      fontWeight: 'bold',
+      color: 'white',
+    },
+    heroTitle: {
+      fontSize: isTablet ? 48 : 32,
+      fontWeight: 'bold',
+      color: 'white',
+      textAlign: 'center',
+      marginBottom: 12,
+      lineHeight: isTablet ? 56 : 38,
+      paddingHorizontal: 8,
+    },
+    heroSubtitle: {
+      fontSize: isTablet ? 18 : 16,
+      color: '#D1D5DB',
+      textAlign: 'center',
+      marginBottom: 24,
+      lineHeight: isTablet ? 28 : 24,
+      paddingHorizontal: 8,
+    },
+    heroButtons: {
+      flexDirection: isTablet ? 'row' : 'column',
+      gap: 16,
+      width: '100%',
+      maxWidth: 300,
+    },
+    heroButtonsTablet: {
+      flexDirection: 'row',
+      maxWidth: 400,
+    },
+    primaryButton: {
+      backgroundColor: '#8B5CF6',
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    primaryButtonText: {
+      color: 'white',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    secondaryButton: {
+      backgroundColor: 'transparent',
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#2D2D3A',
+      alignItems: 'center',
+    },
+    secondaryButtonText: {
+      color: '#D1D5DB',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    section: {
+      paddingHorizontal: 16,
+      paddingVertical: 32,
+    },
+    sectionTitle: {
+      fontSize: isTablet ? 32 : 24,
+      fontWeight: 'bold',
+      color: 'white',
+      textAlign: 'center',
+      marginBottom: 12,
+      paddingHorizontal: 8,
+    },
+    sectionSubtitle: {
+      fontSize: isTablet ? 18 : 16,
+      color: '#9CA3AF',
+      textAlign: 'center',
+      marginBottom: 24,
+      lineHeight: isTablet ? 28 : 24,
+      paddingHorizontal: 8,
+    },
+    toolsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      justifyContent: 'center',
+    },
+    benefitsContainer: {
+      gap: 16,
+    },
+    benefitCard: {
+      backgroundColor: '#16213E',
+      padding: 20,
+      borderRadius: 12,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#2D2D3A',
+    },
+    benefitIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    benefitTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: 'white',
+      marginBottom: 6,
+    },
+    benefitDescription: {
+      fontSize: 14,
+      color: '#9CA3AF',
+      textAlign: 'center',
+      lineHeight: 20,
+    },
+  });
 
 export default function HomeScreen() {
+  const { width } = useWindowDimensions();
+  const isTablet = width > 768;
+  const styles = React.useMemo(() => createStyles(isTablet), [isTablet]);
   const primaryButtonScale = useSharedValue(1);
   const secondaryButtonScale = useSharedValue(1);
+  const primaryHoverScale = useSharedValue(1);
+  const secondaryHoverScale = useSharedValue(1);
 
   const primaryButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: primaryButtonScale.value }],
+      transform: [{ scale: primaryButtonScale.value * primaryHoverScale.value }],
     };
   });
 
   const secondaryButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: secondaryButtonScale.value }],
+      transform: [{ scale: secondaryButtonScale.value * secondaryHoverScale.value }],
     };
   });
 
@@ -83,23 +231,27 @@ export default function HomeScreen() {
             </Text>
 
             <View style={[styles.heroButtons, isTablet && styles.heroButtonsTablet]}>
-              <AnimatedTouchableOpacity
+              <AnimatedPressable
                 style={[styles.primaryButton, primaryButtonAnimatedStyle]}
                 onPress={() => router.push('/(tabs)/tools')}
                 onPressIn={handlePrimaryButtonPressIn}
                 onPressOut={handlePrimaryButtonPressOut}
+                onHoverIn={() => (primaryHoverScale.value = withSpring(1.03))}
+                onHoverOut={() => (primaryHoverScale.value = withSpring(1))}
               >
                 <Text style={styles.primaryButtonText}>Explore Tools</Text>
-              </AnimatedTouchableOpacity>
+              </AnimatedPressable>
               
-              <AnimatedTouchableOpacity
+              <AnimatedPressable
                 style={[styles.secondaryButton, secondaryButtonAnimatedStyle]}
                 onPress={() => router.push('/(tabs)/pricing')}
                 onPressIn={handleSecondaryButtonPressIn}
                 onPressOut={handleSecondaryButtonPressOut}
+                onHoverIn={() => (secondaryHoverScale.value = withSpring(1.03))}
+                onHoverOut={() => (secondaryHoverScale.value = withSpring(1))}
               >
                 <Text style={styles.secondaryButtonText}>View Pricing</Text>
-              </AnimatedTouchableOpacity>
+              </AnimatedPressable>
             </View>
           </View>
         </LinearGradient>
@@ -161,148 +313,3 @@ export default function HomeScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0A0A0F',
-  },
-  heroSection: {
-    paddingHorizontal: 16,
-    paddingVertical: 40,
-    alignItems: 'center',
-  },
-  heroContent: {
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: isTablet ? 600 : '100%',
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  logo: {
-    width: isTablet ? 56 : 44,
-    height: isTablet ? 56 : 44,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  logoText: {
-    fontSize: isTablet ? 28 : 20,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  heroTitle: {
-    fontSize: isTablet ? 48 : 32,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 12,
-    lineHeight: isTablet ? 56 : 38,
-    paddingHorizontal: 8,
-  },
-  heroSubtitle: {
-    fontSize: isTablet ? 18 : 16,
-    color: '#D1D5DB',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: isTablet ? 28 : 24,
-    paddingHorizontal: 8,
-  },
-  heroButtons: {
-    flexDirection: isTablet ? 'row' : 'column',
-    gap: 16,
-    width: '100%',
-    maxWidth: 300,
-  },
-  heroButtonsTablet: {
-    flexDirection: 'row',
-    maxWidth: 400,
-  },
-  primaryButton: {
-    backgroundColor: '#8B5CF6',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#2D2D3A',
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: '#D1D5DB',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  section: {
-    paddingHorizontal: 16,
-    paddingVertical: 32,
-  },
-  sectionTitle: {
-    fontSize: isTablet ? 32 : 24,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 8,
-  },
-  sectionSubtitle: {
-    fontSize: isTablet ? 18 : 16,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: isTablet ? 28 : 24,
-    paddingHorizontal: 8,
-  },
-  toolsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'center',
-  },
-  benefitsContainer: {
-    gap: 16,
-  },
-  benefitCard: {
-    backgroundColor: '#16213E',
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#2D2D3A',
-  },
-  benefitIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  benefitTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 6,
-  },
-  benefitDescription: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-});

@@ -5,16 +5,53 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import ToolCard from '@/components/ToolCard';
 import { allTools } from '@/data/tools';
 
-const { width } = Dimensions.get('window');
-const isTablet = width > 768;
+const createStyles = (isTablet: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#0A0A0F',
+    },
+    header: {
+      paddingHorizontal: 16,
+      paddingVertical: 32,
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: isTablet ? 32 : 24,
+      fontWeight: 'bold',
+      color: 'white',
+      textAlign: 'center',
+      marginBottom: 12,
+      paddingHorizontal: 8,
+    },
+    subtitle: {
+      fontSize: isTablet ? 18 : 16,
+      color: '#D1D5DB',
+      textAlign: 'center',
+      lineHeight: isTablet ? 28 : 24,
+      maxWidth: isTablet ? 600 : '100%',
+      paddingHorizontal: 8,
+    },
+    toolsContainer: {
+      padding: 16,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      justifyContent: 'center',
+    },
+  });
 
 export default function ToolsScreen() {
+  const { width } = useWindowDimensions();
+  const isTablet = width > 768;
+  const styles = React.useMemo(() => createStyles(isTablet), [isTablet]);
+
   return (
     <ScrollView style={styles.container}>
       <SafeAreaView>
@@ -37,38 +74,3 @@ export default function ToolsScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0A0A0F',
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 32,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: isTablet ? 32 : 24,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 8,
-  },
-  subtitle: {
-    fontSize: isTablet ? 18 : 16,
-    color: '#D1D5DB',
-    textAlign: 'center',
-    lineHeight: isTablet ? 28 : 24,
-    maxWidth: isTablet ? 600 : '100%',
-    paddingHorizontal: 8,
-  },
-  toolsContainer: {
-    padding: 16,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'center',
-  },
-});

@@ -5,18 +5,82 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
-  TouchableOpacity,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check } from 'lucide-react-native';
 import PricingCard from '@/components/PricingCard';
 import { pricingPlans } from '@/data/pricing';
 
-const { width } = Dimensions.get('window');
-const isTablet = width > 768;
+const createStyles = (isTablet: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#0A0A0F',
+    },
+    header: {
+      paddingHorizontal: 16,
+      paddingVertical: 32,
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: isTablet ? 32 : 24,
+      fontWeight: 'bold',
+      color: 'white',
+      textAlign: 'center',
+      marginBottom: 12,
+      paddingHorizontal: 8,
+    },
+    subtitle: {
+      fontSize: isTablet ? 18 : 16,
+      color: '#D1D5DB',
+      textAlign: 'center',
+      lineHeight: isTablet ? 28 : 24,
+      maxWidth: isTablet ? 600 : '100%',
+      paddingHorizontal: 8,
+    },
+    pricingContainer: {
+      padding: 16,
+      gap: 16,
+    },
+    faqSection: {
+      padding: 16,
+      paddingTop: 32,
+    },
+    faqTitle: {
+      fontSize: isTablet ? 24 : 20,
+      fontWeight: 'bold',
+      color: 'white',
+      textAlign: 'center',
+      marginBottom: 24,
+      paddingHorizontal: 8,
+    },
+    faqItem: {
+      backgroundColor: '#16213E',
+      padding: 16,
+      borderRadius: 12,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: '#2D2D3A',
+    },
+    faqQuestion: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: 'white',
+      marginBottom: 6,
+    },
+    faqAnswer: {
+      fontSize: 14,
+      color: '#9CA3AF',
+      lineHeight: 20,
+    },
+  });
 
 export default function PricingScreen() {
+  const { width } = useWindowDimensions();
+  const isTablet = width > 768;
+  const styles = React.useMemo(() => createStyles(isTablet), [isTablet]);
+
   return (
     <ScrollView style={styles.container}>
       <SafeAreaView>
@@ -66,65 +130,4 @@ export default function PricingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0A0A0F',
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 32,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: isTablet ? 32 : 24,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 8,
-  },
-  subtitle: {
-    fontSize: isTablet ? 18 : 16,
-    color: '#D1D5DB',
-    textAlign: 'center',
-    lineHeight: isTablet ? 28 : 24,
-    maxWidth: isTablet ? 600 : '100%',
-    paddingHorizontal: 8,
-  },
-  pricingContainer: {
-    padding: 16,
-    gap: 16,
-  },
-  faqSection: {
-    padding: 16,
-    paddingTop: 32,
-  },
-  faqTitle: {
-    fontSize: isTablet ? 24 : 20,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 8,
-  },
-  faqItem: {
-    backgroundColor: '#16213E',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#2D2D3A',
-  },
-  faqQuestion: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-    marginBottom: 6,
-  },
-  faqAnswer: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    lineHeight: 20,
-  },
-});
+ 

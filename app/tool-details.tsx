@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  Pressable,
   SafeAreaView,
   ScrollView,
   Alert,
   ActivityIndicator,
   Image,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -25,12 +25,166 @@ import { useAuth } from '@/contexts/AuthContext';
 import { allTools } from '@/data/tools';
 import { api } from '@/api';
 
-const { width } = Dimensions.get('window');
-const isTablet = width > 768;
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+const createStyles = (width: number) => {
+  const isTablet = width > 768;
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#0A0A0F',
+    },
+    header: {
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
+    },
+    headerContent: {
+      alignItems: 'center',
+    },
+    toolIcon: {
+      width: isTablet ? 70 : 56,
+      height: isTablet ? 70 : 56,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    toolTitle: {
+      fontSize: isTablet ? 24 : 20,
+      fontWeight: 'bold',
+      color: 'white',
+      marginBottom: 6,
+    },
+    toolDescription: {
+      fontSize: 14,
+      color: '#D1D5DB',
+      textAlign: 'center',
+      lineHeight: 20,
+      paddingHorizontal: 8,
+    },
+    content: {
+      flex: 1,
+      padding: 16,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: 'white',
+      marginBottom: 12,
+    },
+    uploadSection: {
+      marginBottom: 24,
+    },
+    imageContainer: {
+      alignItems: 'center',
+    },
+    previewImage: {
+      width: isTablet ? 350 : Math.min(width - 64, 280),
+      height: isTablet ? 233 : Math.min((width - 64) * 0.67, 187),
+      borderRadius: 12,
+      marginBottom: 12,
+    },
+    changeImageButton: {
+      backgroundColor: '#2D2D3A',
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: '#3D3D4A',
+    },
+    changeImageText: {
+      color: '#D1D5DB',
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    uploadButton: {
+      backgroundColor: '#16213E',
+      padding: isTablet ? 40 : 32,
+      borderRadius: 12,
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: '#2D2D3A',
+      borderStyle: 'dashed',
+      width: '100%',
+    },
+    uploadButtonText: {
+      fontSize: isTablet ? 18 : 16,
+      fontWeight: '600',
+      color: '#8B5CF6',
+      marginTop: 10,
+    },
+    uploadHint: {
+      fontSize: 13,
+      color: '#9CA3AF',
+      marginTop: 3,
+    },
+    processSection: {
+      marginBottom: 24,
+    },
+    processButton: {
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    buttonGradient: {
+      paddingVertical: 14,
+      paddingHorizontal: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+      gap: 6,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    processButtonText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: 'white',
+    },
+    resultSection: {
+      marginBottom: 24,
+    },
+    downloadButton: {
+      backgroundColor: '#10B981',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    downloadText: {
+      color: 'white',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    infoSection: {
+      marginBottom: 24,
+    },
+    infoText: {
+      fontSize: 14,
+      color: '#9CA3AF',
+      lineHeight: 20,
+    },
+    errorText: {
+      fontSize: 18,
+      color: '#EF4444',
+      textAlign: 'center',
+      margin: 20,
+    },
+  });
+};
 
 export default function ToolDetailsScreen() {
+  const { width } = useWindowDimensions();
+  const styles = React.useMemo(() => createStyles(width), [width]);
   const { toolId } = useLocalSearchParams<{ toolId: string }>();
   const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -38,38 +192,43 @@ export default function ToolDetailsScreen() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const backButtonScale = useSharedValue(1);
+  const backButtonHover = useSharedValue(1);
   const uploadButtonScale = useSharedValue(1);
+  const uploadButtonHover = useSharedValue(1);
   const processButtonScale = useSharedValue(1);
+  const processButtonHover = useSharedValue(1);
   const downloadButtonScale = useSharedValue(1);
+  const downloadButtonHover = useSharedValue(1);
   const changeImageButtonScale = useSharedValue(1);
+  const changeImageButtonHover = useSharedValue(1);
 
   const backButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: backButtonScale.value }],
+      transform: [{ scale: backButtonScale.value * backButtonHover.value }],
     };
   });
 
   const uploadButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: uploadButtonScale.value }],
+      transform: [{ scale: uploadButtonScale.value * uploadButtonHover.value }],
     };
   });
 
   const processButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: processButtonScale.value }],
+      transform: [{ scale: processButtonScale.value * processButtonHover.value }],
     };
   });
 
   const downloadButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: downloadButtonScale.value }],
+      transform: [{ scale: downloadButtonScale.value * downloadButtonHover.value }],
     };
   });
 
   const changeImageButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: changeImageButtonScale.value }],
+      transform: [{ scale: changeImageButtonScale.value * changeImageButtonHover.value }],
     };
   });
 
@@ -132,7 +291,7 @@ export default function ToolDetailsScreen() {
     }
   };
 
-  const createPressHandlers = (scaleValue: Animated.SharedValue<number>) => ({
+  const createPressHandlers = (scaleValue: any) => ({
     onPressIn: () => {
       scaleValue.value = withSpring(0.95);
     },
@@ -147,13 +306,15 @@ export default function ToolDetailsScreen() {
         colors={['#0F0F23', '#1A1A2E']}
         style={styles.header}
       >
-        <AnimatedTouchableOpacity 
+        <AnimatedPressable 
           style={[styles.backButton, backButtonAnimatedStyle]} 
           onPress={() => router.back()}
           {...createPressHandlers(backButtonScale)}
+          onHoverIn={() => (backButtonHover.value = withSpring(1.05))}
+          onHoverOut={() => (backButtonHover.value = withSpring(1))}
         >
           <ArrowLeft size={24} color="white" />
-        </AnimatedTouchableOpacity>
+        </AnimatedPressable>
         
         <View style={styles.headerContent}>
           <View style={[styles.toolIcon, { backgroundColor: tool.color }]}>
@@ -171,30 +332,34 @@ export default function ToolDetailsScreen() {
           {selectedImage ? (
             <View style={styles.imageContainer}>
               <Image source={{ uri: selectedImage }} style={styles.previewImage} />
-              <AnimatedTouchableOpacity 
+              <AnimatedPressable 
                 style={[styles.changeImageButton, changeImageButtonAnimatedStyle]} 
                 onPress={pickImage}
                 {...createPressHandlers(changeImageButtonScale)}
+                onHoverIn={() => (changeImageButtonHover.value = withSpring(1.03))}
+                onHoverOut={() => (changeImageButtonHover.value = withSpring(1))}
               >
                 <Text style={styles.changeImageText}>Change Image</Text>
-              </AnimatedTouchableOpacity>
+              </AnimatedPressable>
             </View>
           ) : (
-            <AnimatedTouchableOpacity 
+            <AnimatedPressable 
               style={[styles.uploadButton, uploadButtonAnimatedStyle]} 
               onPress={pickImage}
               {...createPressHandlers(uploadButtonScale)}
+              onHoverIn={() => (uploadButtonHover.value = withSpring(1.03))}
+              onHoverOut={() => (uploadButtonHover.value = withSpring(1))}
             >
-              <Upload size={isTablet ? 36 : 28} color="#8B5CF6" />
+              <Upload size={width > 768 ? 36 : 28} color="#8B5CF6" />
               <Text style={styles.uploadButtonText}>Select Image</Text>
               <Text style={styles.uploadHint}>Tap to choose from your gallery</Text>
-            </AnimatedTouchableOpacity>
+            </AnimatedPressable>
           )}
         </View>
 
         {selectedImage && (
           <View style={styles.processSection}>
-            <AnimatedTouchableOpacity 
+            <AnimatedPressable 
               style={[styles.processButton, processButtonAnimatedStyle, isProcessing && styles.buttonDisabled]}
               onPress={processImage}
               onPressIn={!isProcessing ? () => processButtonScale.value = withSpring(0.95) : undefined}
@@ -214,7 +379,7 @@ export default function ToolDetailsScreen() {
                   <Text style={styles.processButtonText}>Process Image</Text>
                 )}
               </LinearGradient>
-            </AnimatedTouchableOpacity>
+            </AnimatedPressable>
           </View>
         )}
 
@@ -223,13 +388,15 @@ export default function ToolDetailsScreen() {
             <Text style={styles.sectionTitle}>Result</Text>
             <View style={styles.imageContainer}>
               <Image source={{ uri: processedImage }} style={styles.previewImage} />
-              <AnimatedTouchableOpacity 
+              <AnimatedPressable 
                 style={[styles.downloadButton, downloadButtonAnimatedStyle]}
                 {...createPressHandlers(downloadButtonScale)}
+                onHoverIn={() => (downloadButtonHover.value = withSpring(1.03))}
+                onHoverOut={() => (downloadButtonHover.value = withSpring(1))}
               >
                 <Download size={18} color="white" />
                 <Text style={styles.downloadText}>Download</Text>
-              </AnimatedTouchableOpacity>
+              </AnimatedPressable>
             </View>
           </View>
         )}
@@ -247,154 +414,4 @@ export default function ToolDetailsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0A0A0F',
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  headerContent: {
-    alignItems: 'center',
-  },
-  toolIcon: {
-    width: isTablet ? 70 : 56,
-    height: isTablet ? 70 : 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  toolTitle: {
-    fontSize: isTablet ? 24 : 20,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 6,
-  },
-  toolDescription: {
-    fontSize: 14,
-    color: '#D1D5DB',
-    textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: 8,
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 12,
-  },
-  uploadSection: {
-    marginBottom: 24,
-  },
-  imageContainer: {
-    alignItems: 'center',
-  },
-  previewImage: {
-    width: isTablet ? 350 : Math.min(width - 64, 280),
-    height: isTablet ? 233 : Math.min((width - 64) * 0.67, 187),
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  changeImageButton: {
-    backgroundColor: '#2D2D3A',
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#3D3D4A',
-  },
-  changeImageText: {
-    color: '#D1D5DB',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  uploadButton: {
-    backgroundColor: '#16213E',
-    padding: isTablet ? 40 : 32,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#2D2D3A',
-    borderStyle: 'dashed',
-    width: '100%',
-  },
-  uploadButtonText: {
-    fontSize: isTablet ? 18 : 16,
-    fontWeight: '600',
-    color: '#8B5CF6',
-    marginTop: 10,
-  },
-  uploadHint: {
-    fontSize: 13,
-    color: '#9CA3AF',
-    marginTop: 3,
-  },
-  processSection: {
-    marginBottom: 24,
-  },
-  processButton: {
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  buttonGradient: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 6,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  processButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: 'white',
-  },
-  resultSection: {
-    marginBottom: 24,
-  },
-  downloadButton: {
-    backgroundColor: '#10B981',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  downloadText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  infoSection: {
-    marginBottom: 24,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    lineHeight: 20,
-  },
-  errorText: {
-    fontSize: 18,
-    color: '#EF4444',
-    textAlign: 'center',
-    margin: 20,
-  },
-});
+ 
