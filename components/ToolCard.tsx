@@ -3,8 +3,8 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  Dimensions,
+  Pressable,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -27,18 +27,17 @@ interface ToolCardProps {
   tool: Tool;
 }
 
-const { width } = Dimensions.get('window');
-const cardWidth = width > 768 ? (width - 80) / 3 : (width - 60) / 2; // 3 cards on tablet, 2 on mobile
-
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function ToolCard({ tool }: ToolCardProps) {
+  const { width } = useWindowDimensions();
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
+  const hoverScale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: scale.value }],
+      transform: [{ scale: scale.value * hoverScale.value }],
       opacity: opacity.value,
     };
   });
@@ -57,12 +56,23 @@ export default function ToolCard({ tool }: ToolCardProps) {
     opacity.value = withTiming(1);
   };
 
+  // Responsive card width: 1 column on small phones, 2 on small tablets, 3 on large screens
+  const numColumns = width >= 1024 ? 3 : width >= 600 ? 2 : 1;
+  const gap = 12;
+  const horizontalPadding = 32; // matches containers using ~16px padding each side
+  const computedCardWidth = Math.min(
+    360,
+    (width - horizontalPadding * 2 - gap * (numColumns - 1)) / numColumns
+  );
+
   return (
-    <AnimatedTouchableOpacity 
-      style={[styles.card, { width: cardWidth, minHeight: 200 }, animatedStyle]} 
+    <AnimatedPressable 
+      style={[styles.card, { width: computedCardWidth, minHeight: 200 }, animatedStyle]} 
       onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      onHoverIn={() => (hoverScale.value = withSpring(1.03))}
+      onHoverOut={() => (hoverScale.value = withSpring(1))}
     >
       <View style={[styles.iconContainer, { backgroundColor: tool.color }]}>
         {tool.icon}
@@ -75,7 +85,7 @@ export default function ToolCard({ tool }: ToolCardProps) {
         <Text style={styles.tryText}>Try it now</Text>
         <ChevronRight size={16} color="#8B5CF6" />
       </View>
-    </AnimatedTouchableOpacity>
+    </AnimatedPressable>
   );
 }
 

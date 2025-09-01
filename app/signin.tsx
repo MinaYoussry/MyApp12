@@ -3,12 +3,12 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   SafeAreaView,
   Alert,
   ActivityIndicator,
-  Dimensions,
+  useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -23,12 +23,212 @@ import { router } from 'expo-router';
 import { Sparkles, Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 
-const { width } = Dimensions.get('window');
-const isTablet = width > 768;
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+const createStyles = (isTablet: boolean) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    safeArea: {
+      flex: 1,
+      backgroundColor: '#0A0A0F',
+    },
+    header: {
+      paddingHorizontal: 16,
+      paddingTop: 10,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: isTablet ? 40 : 24,
+      justifyContent: 'center',
+      maxWidth: isTablet ? 500 : '100%',
+      alignSelf: 'center',
+      width: '100%',
+    },
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: 32,
+    },
+    logo: {
+      width: isTablet ? 70 : 56,
+      height: isTablet ? 70 : 56,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    logoText: {
+      fontSize: isTablet ? 28 : 20,
+      fontWeight: 'bold',
+      color: 'white',
+    },
+    title: {
+      fontSize: isTablet ? 28 : 24,
+      fontWeight: 'bold',
+      color: 'white',
+      textAlign: 'center',
+      marginBottom: 6,
+    },
+    subtitle: {
+      fontSize: 14,
+      color: '#9CA3AF',
+      textAlign: 'center',
+      marginBottom: 32,
+      lineHeight: 20,
+    },
+    form: {
+      gap: 20,
+    },
+    inputGroup: {
+      gap: 6,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: 'white',
+    },
+    input: {
+      backgroundColor: '#2D2D3A',
+      padding: 14,
+      borderRadius: 8,
+      fontSize: 15,
+      color: 'white',
+      borderWidth: 1,
+      borderColor: '#3D3D4A',
+    },
+    passwordContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#2D2D3A',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#3D3D4A',
+    },
+    passwordInput: {
+      flex: 1,
+      padding: 14,
+      fontSize: 15,
+      color: 'white',
+    },
+    passwordToggle: {
+      padding: 14,
+    },
+    optionsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    rememberMe: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    checkbox: {
+      width: 16,
+      height: 16,
+      borderWidth: 2,
+      borderColor: '#4B5563',
+      borderRadius: 3,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxChecked: {
+      backgroundColor: '#8B5CF6',
+      borderColor: '#8B5CF6',
+    },
+    checkmark: {
+      color: 'white',
+      fontSize: 10,
+      fontWeight: 'bold',
+    },
+    rememberMeText: {
+      fontSize: 13,
+      color: '#D1D5DB',
+    },
+    forgotPassword: {
+      fontSize: 13,
+      color: '#8B5CF6',
+    },
+    signInButton: {
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    buttonGradient: {
+      paddingVertical: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    signInButtonText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: 'white',
+    },
+    signUpPrompt: {
+      textAlign: 'center',
+      fontSize: 14,
+      color: '#9CA3AF',
+    },
+    signUpRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 4,
+      marginTop: 8,
+    },
+    signUpLink: {
+      color: '#8B5CF6',
+      fontWeight: '600',
+    },
+    divider: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: '#2D2D3A',
+    },
+    dividerText: {
+      fontSize: 13,
+      color: '#9CA3AF',
+    },
+    socialButtons: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    socialButton: {
+      flex: 1,
+      backgroundColor: '#2D2D3A',
+      padding: 14,
+      borderRadius: 8,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#3D3D4A',
+    },
+    socialButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#D1D5DB',
+    },
+  });
 
 export default function SignInScreen() {
+  const { width } = useWindowDimensions();
+  const isTablet = width > 768;
+  const styles = React.useMemo(() => createStyles(isTablet), [isTablet]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -39,22 +239,25 @@ export default function SignInScreen() {
   const signInButtonScale = useSharedValue(1);
   const socialButtonScale = useSharedValue(1);
   const backButtonScale = useSharedValue(1);
+  const signInHover = useSharedValue(1);
+  const socialHover = useSharedValue(1);
+  const backHover = useSharedValue(1);
 
   const signInButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: signInButtonScale.value }],
+      transform: [{ scale: signInButtonScale.value * signInHover.value }],
     };
   });
 
   const socialButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: socialButtonScale.value }],
+      transform: [{ scale: socialButtonScale.value * socialHover.value }],
     };
   });
 
   const backButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: backButtonScale.value }],
+      transform: [{ scale: backButtonScale.value * backHover.value }],
     };
   });
 
@@ -110,14 +313,16 @@ export default function SignInScreen() {
     >
       <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <AnimatedTouchableOpacity 
+        <AnimatedPressable 
           style={[styles.backButton, backButtonAnimatedStyle]} 
           onPress={() => router.back()}
           onPressIn={handleBackPressIn}
           onPressOut={handleBackPressOut}
+          onHoverIn={() => (backHover.value = withSpring(1.05))}
+          onHoverOut={() => (backHover.value = withSpring(1))}
         >
           <ArrowLeft size={24} color="#9CA3AF" />
-        </AnimatedTouchableOpacity>
+        </AnimatedPressable>
       </View>
 
       <View style={styles.content}>
@@ -137,18 +342,18 @@ export default function SignInScreen() {
         </Text>
 
         <View style={styles.form}>
-              <Sparkles size={isTablet ? 36 : 28} color="white" />
-            <Text style={styles.label}>Email address</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              placeholderTextColor="#9CA3AF"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
+          <Sparkles size={isTablet ? 36 : 28} color="white" />
+          <Text style={styles.label}>Email address</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email"
+            placeholderTextColor="#9CA3AF"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
@@ -161,7 +366,7 @@ export default function SignInScreen() {
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
               />
-              <TouchableOpacity 
+              <Pressable 
                 style={styles.passwordToggle}
                 onPress={() => setShowPassword(!showPassword)}
               >
@@ -170,12 +375,12 @@ export default function SignInScreen() {
                 ) : (
                   <Eye size={20} color="#9CA3AF" />
                 )}
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
 
           <View style={styles.optionsRow}>
-            <TouchableOpacity 
+            <Pressable 
               style={styles.rememberMe}
               onPress={() => setRememberMe(!rememberMe)}
             >
@@ -183,18 +388,20 @@ export default function SignInScreen() {
                 {rememberMe && <Text style={styles.checkmark}>✓</Text>}
               </View>
               <Text style={styles.rememberMeText}>Remember me</Text>
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity>
+            <Pressable>
               <Text style={styles.forgotPassword}>Forgot your password?</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
-          <AnimatedTouchableOpacity 
+          <AnimatedPressable 
             style={[styles.signInButton, signInButtonAnimatedStyle, isLoading && styles.buttonDisabled]} 
             onPress={handleSignIn}
             onPressIn={!isLoading ? handleSignInPressIn : undefined}
             onPressOut={!isLoading ? handleSignInPressOut : undefined}
+            onHoverIn={() => (signInHover.value = withSpring(1.03))}
+            onHoverOut={() => (signInHover.value = withSpring(1))}
             disabled={isLoading}
           >
             <LinearGradient
@@ -206,234 +413,45 @@ export default function SignInScreen() {
               ) : (
                 <Text style={styles.signInButtonText}>Sign in</Text>
               )}
-            </AnimatedTouchableOpacity>
-          </TouchableOpacity>
+            </LinearGradient>
+          </AnimatedPressable>
 
-          <Text style={styles.signUpPrompt}>
-            Don't have an account?{' '}
-            <Text style={styles.signUpLink}>Sign up for free</Text>
-          </Text>
+          <View style={styles.signUpRow}>
+            <Text style={styles.signUpPrompt}>Don't have an account?</Text>
+            <Pressable onPress={() => Alert.alert('Sign up', 'Sign up flow coming soon!')}>
+              <Text style={styles.signUpLink}>Sign up for free</Text>
+            </Pressable>
+          </View>
 
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-              </LinearGradient>
-            </AnimatedTouchableOpacity>
           </View>
 
           <View style={styles.socialButtons}>
-            <AnimatedTouchableOpacity 
+            <AnimatedPressable 
               style={[styles.socialButton, socialButtonAnimatedStyle]}
               onPress={() => handleSocialLogin('Google')}
               onPressIn={handleSocialPressIn}
               onPressOut={handleSocialPressOut}
+              onHoverIn={() => (socialHover.value = withSpring(1.03))}
+              onHoverOut={() => (socialHover.value = withSpring(1))}
             >
               <Text style={styles.socialButtonText}>Google</Text>
-            </AnimatedTouchableOpacity>
+            </AnimatedPressable>
             
-            <AnimatedTouchableOpacity 
+            <AnimatedPressable 
               style={[styles.socialButton, socialButtonAnimatedStyle]}
               onPress={() => handleSocialLogin('GitHub')}
               onPressIn={handleSocialPressIn}
               onPressOut={handleSocialPressOut}
+              onHoverIn={() => (socialHover.value = withSpring(1.03))}
+              onHoverOut={() => (socialHover.value = withSpring(1))}
             >
               <Text style={styles.socialButtonText}>GitHub</Text>
-            </AnimatedTouchableOpacity>
+            </AnimatedPressable>
           </View>
         </View>
-      </View>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#0A0A0F',
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: isTablet ? 40 : 24,
-    justifyContent: 'center',
-    maxWidth: isTablet ? 500 : '100%',
-    alignSelf: 'center',
-    width: '100%',
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  logo: {
-    width: isTablet ? 70 : 56,
-    height: isTablet ? 70 : 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  logoText: {
-    fontSize: isTablet ? 28 : 20,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  title: {
-    fontSize: isTablet ? 28 : 24,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 20,
-  },
-  form: {
-    gap: 20,
-  },
-  inputGroup: {
-    gap: 6,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'white',
-  },
-  input: {
-    backgroundColor: '#2D2D3A',
-    padding: 14,
-    borderRadius: 8,
-    fontSize: 15,
-    color: 'white',
-    borderWidth: 1,
-    borderColor: '#3D3D4A',
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2D2D3A',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3D3D4A',
-  },
-  passwordInput: {
-    flex: 1,
-    padding: 14,
-    fontSize: 15,
-    color: 'white',
-  },
-  passwordToggle: {
-    padding: 14,
-  },
-  optionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  rememberMe: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  checkbox: {
-    width: 16,
-    height: 16,
-    borderWidth: 2,
-    borderColor: '#4B5563',
-    borderRadius: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: '#8B5CF6',
-    borderColor: '#8B5CF6',
-  },
-  checkmark: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  rememberMeText: {
-    fontSize: 13,
-    color: '#D1D5DB',
-  },
-  forgotPassword: {
-    fontSize: 13,
-    color: '#8B5CF6',
-  },
-  signInButton: {
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  buttonGradient: {
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  signInButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: 'white',
-  },
-  signUpPrompt: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#9CA3AF',
-  },
-  signUpLink: {
-    color: '#8B5CF6',
-    fontWeight: '600',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#2D2D3A',
-  },
-  dividerText: {
-    fontSize: 13,
-    color: '#9CA3AF',
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  socialButton: {
-    flex: 1,
-    backgroundColor: '#2D2D3A',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#3D3D4A',
-  },
-  socialButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#D1D5DB',
-  },
-});
