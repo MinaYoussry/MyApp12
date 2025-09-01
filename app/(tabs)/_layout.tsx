@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 import { Chrome as Home, Wrench, DollarSign, User } from 'lucide-react-native';
 
 export default function TabLayout() {
@@ -10,9 +11,20 @@ export default function TabLayout() {
           backgroundColor: '#16213E',
           borderTopColor: '#2D2D3A',
           borderTopWidth: 1,
+          height: Platform.OS === 'ios' ? 85 : 65,
+          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
+          paddingTop: 10,
         },
         tabBarActiveTintColor: '#8B5CF6',
         tabBarInactiveTintColor: '#9CA3AF',
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          marginTop: 4,
+        },
+        tabBarIconStyle: {
+          marginTop: 4,
+        },
       }}
     >
       <Tabs.Screen
@@ -20,7 +32,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ size, color }) => (
-            <Home size={size} color={color} />
+            <Home size={20} color={color} />
           ),
         }}
       />
@@ -29,7 +41,7 @@ export default function TabLayout() {
         options={{
           title: 'Tools',
           tabBarIcon: ({ size, color }) => (
-            <Wrench size={size} color={color} />
+            <Wrench size={20} color={color} />
           ),
         }}
       />
@@ -38,7 +50,7 @@ export default function TabLayout() {
         options={{
           title: 'Pricing',
           tabBarIcon: ({ size, color }) => (
-            <DollarSign size={size} color={color} />
+            <DollarSign size={20} color={color} />
           ),
         }}
       />
@@ -47,7 +59,7 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ size, color }) => (
-            <User size={size} color={color} />
+            <User size={20} color={color} />
           ),
         }}
       />

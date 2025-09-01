@@ -6,11 +6,15 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check } from 'lucide-react-native';
 import PricingCard from '@/components/PricingCard';
 import { pricingPlans } from '@/data/pricing';
+
+const { width } = Dimensions.get('window');
+const isTablet = width > 768;
 
 export default function PricingScreen() {
   return (
@@ -22,8 +26,7 @@ export default function PricingScreen() {
         >
           <Text style={styles.title}>Simple, Transparent Pricing</Text>
           <Text style={styles.subtitle}>
-            Choose the perfect plan for your needs. Start free and upgrade anytime. No hidden
-            fees, no surprises.
+            Choose the perfect plan for your needs. Start free and upgrade anytime.
           </Text>
         </LinearGradient>
 
@@ -69,56 +72,59 @@ const styles = StyleSheet.create({
     backgroundColor: '#0A0A0F',
   },
   header: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: 16,
+    paddingVertical: 32,
     alignItems: 'center',
   },
   title: {
-    fontSize: 32,
+    fontSize: isTablet ? 32 : 24,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+    paddingHorizontal: 8,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: isTablet ? 18 : 16,
     color: '#D1D5DB',
     textAlign: 'center',
-    lineHeight: 28,
-    maxWidth: 600,
+    lineHeight: isTablet ? 28 : 24,
+    maxWidth: isTablet ? 600 : '100%',
+    paddingHorizontal: 8,
   },
   pricingContainer: {
-    padding: 20,
-    gap: 20,
+    padding: 16,
+    gap: 16,
   },
   faqSection: {
-    padding: 20,
-    paddingTop: 40,
+    padding: 16,
+    paddingTop: 32,
   },
   faqTitle: {
-    fontSize: 24,
+    fontSize: isTablet ? 24 : 20,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
+    paddingHorizontal: 8,
   },
   faqItem: {
     backgroundColor: '#16213E',
-    padding: 20,
+    padding: 16,
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#2D2D3A',
   },
   faqQuestion: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: 'white',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   faqAnswer: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#9CA3AF',
-    lineHeight: 24,
+    lineHeight: 20,
   },
 });

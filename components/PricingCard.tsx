@@ -5,9 +5,19 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Dimensions,
 } from 'react-native';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring,
+  withTiming 
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check } from 'lucide-react-native';
+
+const { width } = Dimensions.get('window');
+const isTablet = width > 768;
 
 interface PricingPlan {
   id: string;
@@ -24,9 +34,31 @@ interface PricingCardProps {
   plan: PricingPlan;
 }
 
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+
 export default function PricingCard({ plan }: PricingCardProps) {
+  const buttonScale = useSharedValue(1);
+  const buttonOpacity = useSharedValue(1);
+
+  const buttonAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: buttonScale.value }],
+      opacity: buttonOpacity.value,
+    };
+  });
+
   const handleSubscribe = () => {
     Alert.alert('Coming Soon', `${plan.name} plan subscription will be available soon!`);
+  };
+
+  const handleButtonPressIn = () => {
+    buttonScale.value = withSpring(0.95);
+    buttonOpacity.value = withTiming(0.8);
+  };
+
+  const handleButtonPressOut = () => {
+    buttonScale.value = withSpring(1);
+    buttonOpacity.value = withTiming(1);
   };
 
   return (
@@ -55,9 +87,11 @@ export default function PricingCard({ plan }: PricingCardProps) {
         ))}
       </View>
       
-      <TouchableOpacity 
-        style={styles.button} 
+      <AnimatedTouchableOpacity 
+        style={[styles.button, buttonAnimatedStyle]} 
         onPress={handleSubscribe}
+        onPressIn={handleButtonPressIn}
+        onPressOut={handleButtonPressOut}
       >
         {plan.isPopular ? (
           <LinearGradient
@@ -71,7 +105,7 @@ export default function PricingCard({ plan }: PricingCardProps) {
             <Text style={styles.buttonTextSecondary}>{plan.buttonText}</Text>
           </View>
         )}
-      </TouchableOpacity>
+      </AnimatedTouchableOpacity>
     </View>
   );
 }
@@ -80,10 +114,12 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#16213E',
     borderRadius: 16,
-    padding: 24,
+    padding: 20,
     borderWidth: 1,
     borderColor: '#2D2D3A',
     position: 'relative',
+    marginHorizontal: isTablet ? 8 : 0,
+    maxWidth: isTablet ? 350 : '100%',
   },
   popularCard: {
     borderColor: '#8B5CF6',
@@ -91,8 +127,8 @@ const styles = StyleSheet.create({
   },
   popularBadge: {
     backgroundColor: '#8B5CF6',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: 16,
     position: 'absolute',
     top: -10,
@@ -100,77 +136,78 @@ const styles = StyleSheet.create({
   },
   popularBadgeText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   planName: {
-    fontSize: 24,
+    fontSize: isTablet ? 24 : 20,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   price: {
-    fontSize: 48,
+    fontSize: isTablet ? 48 : 36,
     fontWeight: 'bold',
     color: 'white',
   },
   period: {
-    fontSize: 18,
+    fontSize: isTablet ? 18 : 14,
     color: '#9CA3AF',
-    marginLeft: 4,
+    marginLeft: 2,
   },
   description: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#9CA3AF',
     textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
+    marginBottom: 24,
+    lineHeight: 20,
   },
   featuresContainer: {
-    gap: 16,
-    marginBottom: 32,
+    gap: 12,
+    marginBottom: 24,
   },
   feature: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   featureText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#D1D5DB',
     flex: 1,
+    lineHeight: 20,
   },
   button: {
     borderRadius: 8,
     overflow: 'hidden',
   },
   buttonGradient: {
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonSecondary: {
     backgroundColor: '#2D2D3A',
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#3D3D4A',
   },
   buttonTextPrimary: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: 'white',
   },
   buttonTextSecondary: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: '#D1D5DB',
   },

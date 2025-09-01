@@ -8,11 +8,25 @@ import {
   SafeAreaView,
   Alert,
   ActivityIndicator,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring,
+  withTiming 
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Sparkles, Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+
+const { width } = Dimensions.get('window');
+const isTablet = width > 768;
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 export default function SignInScreen() {
   const [email, setEmail] = useState('');
@@ -21,6 +35,28 @@ export default function SignInScreen() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+
+  const signInButtonScale = useSharedValue(1);
+  const socialButtonScale = useSharedValue(1);
+  const backButtonScale = useSharedValue(1);
+
+  const signInButtonAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: signInButtonScale.value }],
+    };
+  });
+
+  const socialButtonAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: socialButtonScale.value }],
+    };
+  });
+
+  const backButtonAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: backButtonScale.value }],
+    };
+  });
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -43,15 +79,45 @@ export default function SignInScreen() {
     Alert.alert('Coming Soon', `${provider} login will be available soon!`);
   };
 
+  const handleSignInPressIn = () => {
+    signInButtonScale.value = withSpring(0.95);
+  };
+
+  const handleSignInPressOut = () => {
+    signInButtonScale.value = withSpring(1);
+  };
+
+  const handleSocialPressIn = () => {
+    socialButtonScale.value = withSpring(0.95);
+  };
+
+  const handleSocialPressOut = () => {
+    socialButtonScale.value = withSpring(1);
+  };
+
+  const handleBackPressIn = () => {
+    backButtonScale.value = withSpring(0.9);
+  };
+
+  const handleBackPressOut = () => {
+    backButtonScale.value = withSpring(1);
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
+        <AnimatedTouchableOpacity 
+          style={[styles.backButton, backButtonAnimatedStyle]} 
           onPress={() => router.back()}
+          onPressIn={handleBackPressIn}
+          onPressOut={handleBackPressOut}
         >
           <ArrowLeft size={24} color="#9CA3AF" />
-        </TouchableOpacity>
+        </AnimatedTouchableOpacity>
       </View>
 
       <View style={styles.content}>
@@ -71,7 +137,7 @@ export default function SignInScreen() {
         </Text>
 
         <View style={styles.form}>
-          <View style={styles.inputGroup}>
+              <Sparkles size={isTablet ? 36 : 28} color="white" />
             <Text style={styles.label}>Email address</Text>
             <TextInput
               style={styles.input}
@@ -124,9 +190,11 @@ export default function SignInScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity 
-            style={[styles.signInButton, isLoading && styles.buttonDisabled]} 
+          <AnimatedTouchableOpacity 
+            style={[styles.signInButton, signInButtonAnimatedStyle, isLoading && styles.buttonDisabled]} 
             onPress={handleSignIn}
+            onPressIn={!isLoading ? handleSignInPressIn : undefined}
+            onPressOut={!isLoading ? handleSignInPressOut : undefined}
             disabled={isLoading}
           >
             <LinearGradient
@@ -138,7 +206,7 @@ export default function SignInScreen() {
               ) : (
                 <Text style={styles.signInButtonText}>Sign in</Text>
               )}
-            </LinearGradient>
+            </AnimatedTouchableOpacity>
           </TouchableOpacity>
 
           <Text style={styles.signUpPrompt}>
@@ -148,38 +216,46 @@ export default function SignInScreen() {
 
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Or continue with</Text>
-            <View style={styles.dividerLine} />
+              </LinearGradient>
+            </AnimatedTouchableOpacity>
           </View>
 
           <View style={styles.socialButtons}>
-            <TouchableOpacity 
-              style={styles.socialButton}
+            <AnimatedTouchableOpacity 
+              style={[styles.socialButton, socialButtonAnimatedStyle]}
               onPress={() => handleSocialLogin('Google')}
+              onPressIn={handleSocialPressIn}
+              onPressOut={handleSocialPressOut}
             >
               <Text style={styles.socialButtonText}>Google</Text>
-            </TouchableOpacity>
+            </AnimatedTouchableOpacity>
             
-            <TouchableOpacity 
-              style={styles.socialButton}
+            <AnimatedTouchableOpacity 
+              style={[styles.socialButton, socialButtonAnimatedStyle]}
               onPress={() => handleSocialLogin('GitHub')}
+              onPressIn={handleSocialPressIn}
+              onPressOut={handleSocialPressOut}
             >
               <Text style={styles.socialButtonText}>GitHub</Text>
-            </TouchableOpacity>
+            </AnimatedTouchableOpacity>
           </View>
         </View>
       </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  safeArea: {
+    flex: 1,
     backgroundColor: '#0A0A0F',
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 10,
   },
   backButton: {
@@ -190,56 +266,59 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 32,
+    paddingHorizontal: isTablet ? 40 : 24,
     justifyContent: 'center',
+    maxWidth: isTablet ? 500 : '100%',
+    alignSelf: 'center',
+    width: '100%',
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
   },
   logo: {
-    width: 64,
-    height: 64,
+    width: isTablet ? 70 : 56,
+    height: isTablet ? 70 : 56,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   logoText: {
-    fontSize: 24,
+    fontSize: isTablet ? 28 : 20,
     fontWeight: 'bold',
     color: 'white',
   },
   title: {
-    fontSize: 28,
+    fontSize: isTablet ? 28 : 24,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#9CA3AF',
     textAlign: 'center',
-    marginBottom: 40,
-    lineHeight: 24,
+    marginBottom: 32,
+    lineHeight: 20,
   },
   form: {
-    gap: 24,
+    gap: 20,
   },
   inputGroup: {
-    gap: 8,
+    gap: 6,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: 'white',
   },
   input: {
     backgroundColor: '#2D2D3A',
-    padding: 16,
+    padding: 14,
     borderRadius: 8,
-    fontSize: 16,
+    fontSize: 15,
     color: 'white',
     borderWidth: 1,
     borderColor: '#3D3D4A',
@@ -254,26 +333,28 @@ const styles = StyleSheet.create({
   },
   passwordInput: {
     flex: 1,
-    padding: 16,
-    fontSize: 16,
+    padding: 14,
+    fontSize: 15,
     color: 'white',
   },
   passwordToggle: {
-    padding: 16,
+    padding: 14,
   },
   optionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   rememberMe: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   checkbox: {
-    width: 18,
-    height: 18,
+    width: 16,
+    height: 16,
     borderWidth: 2,
     borderColor: '#4B5563',
     borderRadius: 3,
@@ -286,15 +367,15 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
   },
   rememberMeText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#D1D5DB',
   },
   forgotPassword: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#8B5CF6',
   },
   signInButton: {
@@ -302,7 +383,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   buttonGradient: {
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -310,13 +391,13 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   signInButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: 'white',
   },
   signUpPrompt: {
     textAlign: 'center',
-    fontSize: 16,
+    fontSize: 14,
     color: '#9CA3AF',
   },
   signUpLink: {
@@ -326,7 +407,7 @@ const styles = StyleSheet.create({
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 12,
   },
   dividerLine: {
     flex: 1,
@@ -334,64 +415,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#2D2D3A',
   },
   dividerText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#9CA3AF',
   },
   socialButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
   socialButton: {
     flex: 1,
     backgroundColor: '#2D2D3A',
-    padding: 16,
+    padding: 14,
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#3D3D4A',
   },
   socialButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#D1D5DB',
-  },
-  signInPrompt: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  signInIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  signInTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  signInSubtitle: {
-    fontSize: 16,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  signInButton: {
-    backgroundColor: '#8B5CF6',
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  signInButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

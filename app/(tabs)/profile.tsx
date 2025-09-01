@@ -6,14 +6,82 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Alert,
+  Dimensions,
 } from 'react-native';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring,
+  withTiming 
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { User, Settings, CreditCard, CircleHelp as HelpCircle, LogOut } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 
+const { width } = Dimensions.get('window');
+const isTablet = width > 768;
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+
+function AnimatedMenuItem({ 
+  children, 
+  onPress, 
+  style 
+}: { 
+  children: React.ReactNode; 
+  onPress?: () => void; 
+  style?: any;
+}) {
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: scale.value }],
+      opacity: opacity.value,
+    };
+  });
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.98);
+    opacity.value = withTiming(0.8);
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1);
+    opacity.value = withTiming(1);
+  };
+
+  return (
+    <AnimatedTouchableOpacity
+      style={[style, animatedStyle]}
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+    >
+      {children}
+    </AnimatedTouchableOpacity>
+  );
+}
+
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const signInButtonScale = useSharedValue(1);
+
+  const signInButtonAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: signInButtonScale.value }],
+    };
+  });
+
+  const handleSignInPressIn = () => {
+    signInButtonScale.value = withSpring(0.95);
+  };
+
+  const handleSignInPressOut = () => {
+    signInButtonScale.value = withSpring(1);
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -42,7 +110,7 @@ export default function ProfileScreen() {
             colors={['#8B5CF6', '#3B82F6']}
             style={styles.signInIcon}
           >
-            <User size={32} color="white" />
+            <User size={isTablet ? 36 : 28} color="white" />
           </LinearGradient>
           
           <Text style={styles.signInTitle}>Welcome to AlloPhoto AI</Text>
@@ -50,9 +118,14 @@ export default function ProfileScreen() {
             Sign in to access your tools, view your usage, and manage your account.
           </Text>
 
-          <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
+          <AnimatedTouchableOpacity 
+            style={[styles.signInButton, signInButtonAnimatedStyle]} 
+            onPress={handleSignIn}
+            onPressIn={handleSignInPressIn}
+            onPressOut={handleSignInPressOut}
+          >
             <Text style={styles.signInButtonText}>Sign In</Text>
-          </TouchableOpacity>
+          </AnimatedTouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -86,25 +159,28 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.menuContainer}>
-          <TouchableOpacity style={styles.menuItem}>
-            <Settings size={24} color="#9CA3AF" />
+          <AnimatedMenuItem style={styles.menuItem}>
+            <Settings size={20} color="#9CA3AF" />
             <Text style={styles.menuText}>Account Settings</Text>
-          </TouchableOpacity>
+          </AnimatedMenuItem>
 
-          <TouchableOpacity style={styles.menuItem}>
-            <CreditCard size={24} color="#9CA3AF" />
+          <AnimatedMenuItem style={styles.menuItem}>
+            <CreditCard size={20} color="#9CA3AF" />
             <Text style={styles.menuText}>Billing & Subscription</Text>
-          </TouchableOpacity>
+          </AnimatedMenuItem>
 
-          <TouchableOpacity style={styles.menuItem}>
-            <HelpCircle size={24} color="#9CA3AF" />
+          <AnimatedMenuItem style={styles.menuItem}>
+            <HelpCircle size={20} color="#9CA3AF" />
             <Text style={styles.menuText}>Help & Support</Text>
-          </TouchableOpacity>
+          </AnimatedMenuItem>
 
-          <TouchableOpacity style={[styles.menuItem, styles.logoutItem]} onPress={handleLogout}>
-            <LogOut size={24} color="#EF4444" />
+          <AnimatedMenuItem 
+            style={[styles.menuItem, styles.logoutItem]} 
+            onPress={handleLogout}
+          >
+            <LogOut size={20} color="#EF4444" />
             <Text style={[styles.menuText, styles.logoutText]}>Sign Out</Text>
-          </TouchableOpacity>
+          </AnimatedMenuItem>
         </View>
       </View>
     </SafeAreaView>
@@ -117,86 +193,87 @@ const styles = StyleSheet.create({
     backgroundColor: '#0A0A0F',
   },
   header: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: 16,
+    paddingVertical: 32,
     alignItems: 'center',
   },
   profileInfo: {
     alignItems: 'center',
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: isTablet ? 90 : 70,
+    height: isTablet ? 90 : 70,
+    borderRadius: isTablet ? 45 : 35,
     backgroundColor: '#8B5CF6',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   avatarText: {
-    fontSize: 32,
+    fontSize: isTablet ? 36 : 28,
     fontWeight: 'bold',
     color: 'white',
     textTransform: 'uppercase',
   },
   userName: {
-    fontSize: 24,
+    fontSize: isTablet ? 24 : 20,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   userEmail: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#9CA3AF',
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: 16,
   },
   statsContainer: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 32,
+    gap: 12,
+    marginBottom: 24,
   },
   statCard: {
     flex: 1,
     backgroundColor: '#16213E',
-    padding: 20,
+    padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#2D2D3A',
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: isTablet ? 24 : 20,
     fontWeight: 'bold',
     color: '#8B5CF6',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#9CA3AF',
+    textAlign: 'center',
   },
   menuContainer: {
-    gap: 4,
+    gap: 3,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#16213E',
-    padding: 16,
+    padding: 14,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#2D2D3A',
   },
   menuText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#D1D5DB',
-    marginLeft: 12,
+    marginLeft: 10,
     flex: 1,
   },
   logoutItem: {
-    marginTop: 16,
+    marginTop: 12,
   },
   logoutText: {
     color: '#EF4444',
@@ -205,39 +282,41 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
   },
   signInIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: isTablet ? 90 : 70,
+    height: isTablet ? 90 : 70,
+    borderRadius: isTablet ? 45 : 35,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   signInTitle: {
-    fontSize: 24,
+    fontSize: isTablet ? 24 : 20,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   signInSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#9CA3AF',
     textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
+    marginBottom: 24,
+    lineHeight: 20,
   },
   signInButton: {
     backgroundColor: '#8B5CF6',
-    paddingHorizontal: 32,
-    paddingVertical: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
     borderRadius: 8,
+    minWidth: 120,
+    alignItems: 'center',
   },
   signInButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
   },
 });

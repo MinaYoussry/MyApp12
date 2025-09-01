@@ -6,14 +6,57 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  Dimensions,
 } from 'react-native';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring,
+  withTiming 
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Sparkles, Zap, Star } from 'lucide-react-native';
 import ToolCard from '@/components/ToolCard';
 import { featuredTools } from '@/data/tools';
 
+const { width } = Dimensions.get('window');
+const isTablet = width > 768;
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+
 export default function HomeScreen() {
+  const primaryButtonScale = useSharedValue(1);
+  const secondaryButtonScale = useSharedValue(1);
+
+  const primaryButtonAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: primaryButtonScale.value }],
+    };
+  });
+
+  const secondaryButtonAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: secondaryButtonScale.value }],
+    };
+  });
+
+  const handlePrimaryButtonPressIn = () => {
+    primaryButtonScale.value = withSpring(0.95);
+  };
+
+  const handlePrimaryButtonPressOut = () => {
+    primaryButtonScale.value = withSpring(1);
+  };
+
+  const handleSecondaryButtonPressIn = () => {
+    secondaryButtonScale.value = withSpring(0.95);
+  };
+
+  const handleSecondaryButtonPressOut = () => {
+    secondaryButtonScale.value = withSpring(1);
+  };
+
   return (
     <ScrollView style={styles.container}>
       <SafeAreaView>
@@ -28,7 +71,7 @@ export default function HomeScreen() {
                 colors={['#8B5CF6', '#3B82F6']}
                 style={styles.logo}
               >
-                <Sparkles size={28} color="white" />
+                <Sparkles size={isTablet ? 32 : 24} color="white" />
               </LinearGradient>
               <Text style={styles.logoText}>AlloPhoto AI</Text>
             </View>
@@ -36,24 +79,27 @@ export default function HomeScreen() {
             <Text style={styles.heroTitle}>Your AI Image Toolbox</Text>
             <Text style={styles.heroSubtitle}>
               Transform, enhance, and create stunning images with our suite of AI-powered tools.
-              From background removal to art generation, unleash your creativity with cutting-edge
-              technology.
+              From background removal to art generation, unleash your creativity.
             </Text>
 
-            <View style={styles.heroButtons}>
-              <TouchableOpacity
-                style={styles.primaryButton}
+            <View style={[styles.heroButtons, isTablet && styles.heroButtonsTablet]}>
+              <AnimatedTouchableOpacity
+                style={[styles.primaryButton, primaryButtonAnimatedStyle]}
                 onPress={() => router.push('/(tabs)/tools')}
+                onPressIn={handlePrimaryButtonPressIn}
+                onPressOut={handlePrimaryButtonPressOut}
               >
                 <Text style={styles.primaryButtonText}>Explore Tools</Text>
-              </TouchableOpacity>
+              </AnimatedTouchableOpacity>
               
-              <TouchableOpacity
-                style={styles.secondaryButton}
+              <AnimatedTouchableOpacity
+                style={[styles.secondaryButton, secondaryButtonAnimatedStyle]}
                 onPress={() => router.push('/(tabs)/pricing')}
+                onPressIn={handleSecondaryButtonPressIn}
+                onPressOut={handleSecondaryButtonPressOut}
               >
                 <Text style={styles.secondaryButtonText}>View Pricing</Text>
-              </TouchableOpacity>
+              </AnimatedTouchableOpacity>
             </View>
           </View>
         </LinearGradient>
@@ -82,7 +128,7 @@ export default function HomeScreen() {
           <View style={styles.benefitsContainer}>
             <View style={styles.benefitCard}>
               <View style={[styles.benefitIcon, { backgroundColor: '#8B5CF6' }]}>
-                <Zap size={24} color="white" />
+                <Zap size={20} color="white" />
               </View>
               <Text style={styles.benefitTitle}>Lightning Fast</Text>
               <Text style={styles.benefitDescription}>
@@ -92,7 +138,7 @@ export default function HomeScreen() {
 
             <View style={styles.benefitCard}>
               <View style={[styles.benefitIcon, { backgroundColor: '#10B981' }]}>
-                <Star size={24} color="white" />
+                <Star size={20} color="white" />
               </View>
               <Text style={styles.benefitTitle}>Professional Quality</Text>
               <Text style={styles.benefitDescription}>
@@ -102,7 +148,7 @@ export default function HomeScreen() {
 
             <View style={styles.benefitCard}>
               <View style={[styles.benefitIcon, { backgroundColor: '#F59E0B' }]}>
-                <Sparkles size={24} color="white" />
+                <Sparkles size={20} color="white" />
               </View>
               <Text style={styles.benefitTitle}>Easy to Use</Text>
               <Text style={styles.benefitDescription}>
@@ -122,56 +168,66 @@ const styles = StyleSheet.create({
     backgroundColor: '#0A0A0F',
   },
   heroSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 60,
+    paddingHorizontal: 16,
+    paddingVertical: 40,
     alignItems: 'center',
   },
   heroContent: {
     alignItems: 'center',
-    maxWidth: 600,
+    width: '100%',
+    maxWidth: isTablet ? 600 : '100%',
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   logo: {
-    width: 48,
-    height: 48,
+    width: isTablet ? 56 : 44,
+    height: isTablet ? 56 : 44,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   logoText: {
-    fontSize: 24,
+    fontSize: isTablet ? 28 : 20,
     fontWeight: 'bold',
     color: 'white',
   },
   heroTitle: {
-    fontSize: 48,
+    fontSize: isTablet ? 48 : 32,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
-    marginBottom: 16,
-    lineHeight: 56,
+    marginBottom: 12,
+    lineHeight: isTablet ? 56 : 38,
+    paddingHorizontal: 8,
   },
   heroSubtitle: {
-    fontSize: 18,
+    fontSize: isTablet ? 18 : 16,
     color: '#D1D5DB',
     textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 28,
+    marginBottom: 24,
+    lineHeight: isTablet ? 28 : 24,
+    paddingHorizontal: 8,
   },
   heroButtons: {
-    flexDirection: 'row',
+    flexDirection: isTablet ? 'row' : 'column',
     gap: 16,
+    width: '100%',
+    maxWidth: 300,
+  },
+  heroButtonsTablet: {
+    flexDirection: 'row',
+    maxWidth: 400,
   },
   primaryButton: {
     backgroundColor: '#8B5CF6',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     borderRadius: 8,
+    alignItems: 'center',
   },
   primaryButtonText: {
     color: 'white',
@@ -180,11 +236,12 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     backgroundColor: 'transparent',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#2D2D3A',
+    alignItems: 'center',
   },
   secondaryButtonText: {
     color: '#D1D5DB',
@@ -192,58 +249,60 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   section: {
-    paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingHorizontal: 16,
+    paddingVertical: 32,
   },
   sectionTitle: {
-    fontSize: 32,
+    fontSize: isTablet ? 32 : 24,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
+    paddingHorizontal: 8,
   },
   sectionSubtitle: {
-    fontSize: 18,
+    fontSize: isTablet ? 18 : 16,
     color: '#9CA3AF',
     textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 28,
+    marginBottom: 24,
+    lineHeight: isTablet ? 28 : 24,
+    paddingHorizontal: 8,
   },
   toolsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
+    gap: 12,
     justifyContent: 'center',
   },
   benefitsContainer: {
-    gap: 24,
+    gap: 16,
   },
   benefitCard: {
     backgroundColor: '#16213E',
-    padding: 24,
+    padding: 20,
     borderRadius: 12,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#2D2D3A',
   },
   benefitIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   benefitTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   benefitDescription: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#9CA3AF',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 20,
   },
 });
